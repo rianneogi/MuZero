@@ -5,7 +5,7 @@ int main()
 	srand(time(0));
 	initCuda();
 
-	// playVsHuman(10000);
-	alphaZero();
+	playVsHuman(10000);
+	// alphaZero();
 	return 0;
 }

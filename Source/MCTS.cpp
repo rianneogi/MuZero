@@ -2,18 +2,18 @@
 
 const float c_puct = 1.41;
 
-float search(Node* s, TicTacToe& game, const Net& nn)
+float search(Node* s, Game* game, const Net& nn)
 {
 	assert(s->Qvalues != nullptr);
 	assert(s->children != nullptr);
 	assert(s->Nvalues != nullptr);
 	// assert(s->Pvalues != nullptr);
 
-	if(game.isOver())
+	if(game->isOver())
 	{
-		float v = game.getScore();
+		float v = game->getScore();
 
-		if(game.mTurn==1)
+		if(game->mTurn==1)
 		{
 			v = -v;
 		}
@@ -33,7 +33,7 @@ float search(Node* s, TicTacToe& game, const Net& nn)
 		float sum_pvalues = 0;
 		for (int i = 0; i < MAX_ACTIONS;i++)
 		{
-			if(game.isLegal(i))
+			if(game->isLegal(i))
 			{
 				sum_pvalues += s->Pvalues[i];
 			}
@@ -45,10 +45,10 @@ float search(Node* s, TicTacToe& game, const Net& nn)
 		if(sum_pvalues==0)
 		{
 			//return a uniform distribution over legal actions
-			std::vector<Action> actions = game.getActions();
+			std::vector<Action> actions = game->getActions();
 			for (int i = 0; i < MAX_ACTIONS; i++)
 			{
-				if(game.isLegal(i))
+				if(game->isLegal(i))
 				{
 					s->Pvalues[i] = (1.0 / actions.size());
 				}
@@ -72,7 +72,7 @@ float search(Node* s, TicTacToe& game, const Net& nn)
 	float max_u = -10000;
 	Action best_a = -1;
 	int best_i = -1;
-	std::vector<Action> actions = game.getActions();
+	std::vector<Action> actions = game->getActions();
 	for (int i = 0; i < actions.size();i++)
 	{
 		Action a = actions[i];
@@ -97,10 +97,10 @@ float search(Node* s, TicTacToe& game, const Net& nn)
 		sp = s->children[a];
 	}
 	assert(sp != nullptr);
-	game.doAction(a);
+	game->doAction(a);
 
 	float v = search(sp, game, nn);
-	game.undoAction(a);
+	game->undoAction(a);
 	
 	s->Qvalues[a] = (s->Nvalues[a] * s->Qvalues[a] + v) / (s->Nvalues[a] + 1);
 	s->Nvalues[a] += 1;
@@ -110,7 +110,7 @@ float search(Node* s, TicTacToe& game, const Net& nn)
 	return -v;
 }
 
-void getActionProb(float* res, TicTacToe& game, const Net& nn, int num_sims, float temp)
+void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float temp)
 {
 	Node *root = new Node(nullptr, MAX_ACTIONS);
 	for (int i = 0; i < num_sims; i++)
@@ -119,7 +119,7 @@ void getActionProb(float* res, TicTacToe& game, const Net& nn, int num_sims, flo
 		search(root, game, nn);
 	}
 
-	std::vector<Action> actions = game.getActions();
+	std::vector<Action> actions = game->getActions();
 	assert(actions.size() != 0);
 	// float* output = new float[MAX_ACTIONS];
 
@@ -156,7 +156,7 @@ void getActionProb(float* res, TicTacToe& game, const Net& nn, int num_sims, flo
 	for (int i = 0; i < MAX_ACTIONS; i++)
 	{
 		// Action a = actions[i];
-		assert(root->Nvalues[i] == 0 || game.isLegal(i));
+		assert(root->Nvalues[i] == 0 || game->isLegal(i));
 		res[i] = pow(root->Nvalues[i], temp);
 		sum_n += root->Nvalues[i];
 	}
@@ -167,7 +167,7 @@ void getActionProb(float* res, TicTacToe& game, const Net& nn, int num_sims, flo
 		// float* uniform = new float[MAX_ACTIONS];
 		for (int i = 0; i < MAX_ACTIONS;i++)
 		{
-			if(game.isLegal(i))
+			if(game->isLegal(i))
 			{
 				res[i] = (1.0 / actions.size());
 			}

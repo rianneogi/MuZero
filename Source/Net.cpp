@@ -52,7 +52,7 @@ void Net::init()
 	predictValueTensor = Tensor(make_shape(BatchSize, 1));
 }
 
-PolicyValuePair Net::predict(const TicTacToe& pos) const
+PolicyValuePair Net::predict(Game* pos) const
 {
 	// pos.state_to_tensor(predictStateTensor.mData);
 	// Tensor state = Tensor(state_tensor, make_shape(BatchSize, GameStateSize), false);
@@ -68,7 +68,7 @@ PolicyValuePair Net::predict(const TicTacToe& pos) const
 
 	// board->forward(predictStateTensor);
 
-	pos.stateToTensor(inputBlob->Data.mData);
+	pos->stateToTensor(inputBlob->Data.mData);
 	inputBlob->copyToGPU();
 	for (int i = 0; i < board->mNeurons.size(); i++)
 	{

@@ -67,7 +67,7 @@ public:
 	Initializer *initializer;
 
 	void init();
-	PolicyValuePair predict(const TicTacToe& pos) const;
+	PolicyValuePair predict(Game* pos) const;
 	void train(const std::vector<TrainingExample>& examples, uint64_t num_epochs);
 	void copyFrom(const Net& other);
 	void save(const std::string& s);

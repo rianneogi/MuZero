@@ -1,56 +1,78 @@
 #pragma once
 
-#include "Game.h"
+#include "TicTacToe.h"
 
-class TicTacToe : public Game
+class Connect4 : public Game
 {
 public:
-    // int mTurn;
-    int* mState;
-    int mNumMoves;
-    
-    TicTacToe()
+	// int mTurn;
+	int *mState;
+	int mNumMoves;
+
+	Connect4()
     {
         mTurn = 0;
-        mState = new int[9];
-        for(int i = 0;i<9;i++)
+        mState = new int[6*7];
+        for(int i = 0;i<6*7;i++)
         {
             mState[i] = 2;
         }
         mNumMoves = 0;
     }
     
-    ~TicTacToe()
+    ~Connect4()
     {
         delete[] mState;
     }
 
-    TicTacToe(const TicTacToe& other)
+    Connect4(const TicTacToe& other)
     {
         mTurn = other.mTurn;
         mNumMoves = other.mNumMoves;
-        mState = new int[9];
-        memcpy(mState, other.mState, 9 * sizeof(int));
+        mState = new int[6*7];
+        memcpy(mState, other.mState, 6*7 * sizeof(int));
     }
 
-    bool isLegal(Action action) const
+    bool isLegal(int pos) const
     {
-        if(mState[action]==2)
+		if(pos>=7 || pos < 0)
+		{
+			return false;
+		}
+		if(mState[pos*6 + 5]==2)
             return true;
         return false;
     }
     
-    void doAction(Action action)
+    void doAction(int pos)
     {
-        mState[action] = mTurn;
+		int ht = 0;
+		for (int i = 0; i < 6; i++)
+		{
+			if(mState[pos*6+i]==2)
+			{
+				ht = i;
+				break;
+			}
+		}
+		mState[pos*6+ht] = mTurn;
         mTurn = (mTurn+1)%2;
         mNumMoves++;
     }
 
     void undoAction(int pos)
     {
-        mState[pos] = 2;
-        mTurn = (mTurn + 1) % 2;
+		int ht = 0;
+		for (int i = 0; i < 6; i++)
+		{
+			if(mState[pos*6+i]==2)
+			{
+				ht = i-1;
+				break;
+			}
+		}
+		mState[pos * 6 + ht] = 2;
+		mTurn = (mTurn + 1) % 2;
         mNumMoves--;
     }
 
@@ -60,7 +82,7 @@ public:
     
     void print() const
     {
-        for(int i = 0;i<9;i++)
+        for(int i = 0;i<7*6;i++)
         {
             if(mState[i]==0)
             {
@@ -75,7 +97,7 @@ public:
                 printf("- ");
             }
             // printf("%d ", mState[i]);
-            if((i+1)%3==0)
+            if((i+1)%6==0)
             {
                 printf("\n");
             }
@@ -89,7 +111,3 @@ public:
 
     std::vector<Action> getActions() const;
 };
-
-// int play_tictactoe(Genotype* indi, Execution& exe, TicTacToe& game);
-// int duel_tictactoe(Genotype* p1, Genotype* p2, Execution& exe, TicTacToe& game);
-// void play_tictactoe_human(Genotype* indi, Execution& exe);

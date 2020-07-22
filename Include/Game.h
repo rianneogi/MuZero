@@ -8,19 +8,22 @@ typedef int Action;
 class Game 
 {
 public:
+	int mTurn; //equal to 0 if player 1's turn and 1 if player 2's turn
+
 	Game() {};
 	virtual ~Game() {};
 
-	virtual bool isOver() = 0;
-	virtual int doAction(Action action) = 0;
+	virtual bool isOver() const = 0;
+	virtual void doAction(Action action) = 0;
 	virtual void undoAction(Action action) = 0;
 	// virtual byte_t* getState() = 0;
 	// virtual int getStateSize() = 0;
 	virtual void restart() = 0;
-	virtual std::vector<Action> getActions() = 0;
-	virtual void stateToTensor(float *res) = 0;
-	virtual int getTurn() = 0;
-	virtual int getScore() = 0;
-	virtual bool isLegal(Action action) = 0;
-	virtual void print() = 0;
+	virtual std::vector<Action> getActions() const = 0;
+	virtual void stateToTensor(float *res) const = 0;
+	virtual float* stateToTensor() const = 0;
+	// virtual int getTurn() const = 0;
+	virtual int getScore() const = 0;
+	virtual bool isLegal(Action action) const = 0;
+	virtual void print() const = 0;
 };

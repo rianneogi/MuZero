@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TicTacToe.h"
+#include "Connect4.h"
 
 extern const int MAX_ACTIONS;
 

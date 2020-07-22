@@ -24,7 +24,7 @@ int sample_action_prob(float* p, int count)
 void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn)
 {
 	//Execute one episode of self-play and append collected data to examples
-	TicTacToe game;
+	Game *game = new TicTacToe();
 	// Net nn;
 	// nn.init();
 
@@ -43,21 +43,21 @@ void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn)
 		float *p = new float[MAX_ACTIONS];
 		getActionProb(p, game, nn, num_sims, temp);
 		
-		std::vector<Action> actions = game.getActions();
+		std::vector<Action> actions = game->getActions();
 
 		Action a = sample_action_prob(p, MAX_ACTIONS);
 		// memcpy(p, action_probs, MAX_ACTIONS * sizeof(float));
 		
-		examples.push_back(TrainingExample(game.stateToTensor(), game.mTurn==0? 1 : -1, p, 0));
+		examples.push_back(TrainingExample(game->stateToTensor(), game->mTurn==0? 1 : -1, p, 0));
 
-		game.doAction(a);
+		game->doAction(a);
 		
-		if(game.isOver())
+		if(game->isOver())
 		{
 			for (int i = start_example_size; i < examples.size();i++)
 			{
 				//update the training data with the result of the game
-				examples[i].value = (game.getScore()==examples[i].player)? 1.0 : -1.0;
+				examples[i].value = (game->getScore()==examples[i].player)? 1.0 : -1.0;
 			}
 			break;
 		}
@@ -74,7 +74,8 @@ float pit(const Net& net1, const Net& net2, int num_games)
 {
 	//Pits net1 and net2 against each other and returns the winrate of net1
 	int firstPlayer = 0;
-	TicTacToe game;
+	Game* game = new TicTacToe();
+
 	int score1 = 0;
 	int score2 = 0;
 	int EPISODE_MAX_STEP = 250;
@@ -89,7 +90,7 @@ float pit(const Net& net1, const Net& net2, int num_games)
 	for (int i = 0; i < num_games; i++)
 	{
 		int episodeStep = 0;
-		game.restart();
+		game->restart();
 		firstPlayer = i%2;
 		while (true)
 		{
@@ -97,7 +98,7 @@ float pit(const Net& net1, const Net& net2, int num_games)
 
 			// float *action_probs = nullptr;
 			
-			if((firstPlayer+game.mTurn)%2==0)
+			if((firstPlayer+game->mTurn)%2==0)
 			{
 				getActionProb(action_probs, game, net1, num_sims, temp);
 			}
@@ -111,16 +112,16 @@ float pit(const Net& net1, const Net& net2, int num_games)
 
 			// examples.push_back(TrainingExample(game.state_to_tensor(),game.mTurn,action_probs,0));
 
-			game.doAction(a);
+			game->doAction(a);
 
-			if(game.isOver())
+			if(game->isOver())
 			{
 				// for (int i = start_example_size; i < examples.size();i++)
 				// {
 				// 	//update the training data with the result of the game
 				// 	examples[i].value = (game.get_score()==examples[i].player)? 1.0 : -1.0;
 				// }
-				if(game.getScore()==1)
+				if(game->getScore()==1)
 				{
 					if(firstPlayer==0)
 					{
@@ -133,7 +134,7 @@ float pit(const Net& net1, const Net& net2, int num_games)
 						score2 += 2;
 					}
 				}
-				else if(game.getScore()==-1)
+				else if(game->getScore()==-1)
 				{
 					if(firstPlayer==0)
 					{
@@ -261,7 +262,7 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 	}
 }
 
-Action getHumanInput(const TicTacToe& game, const Net& nn)
+Action getHumanInput(Game* game, const Net& nn)
 {
 	while(true)
 	{
@@ -279,7 +280,7 @@ Action getHumanInput(const TicTacToe& game, const Net& nn)
 			printf("\nValue: %f\n", pv.value);
 		}
 
-		if(game.isLegal(x))
+		if(game->isLegal(x))
 		{
 			return x;
 		}
@@ -289,10 +290,10 @@ Action getHumanInput(const TicTacToe& game, const Net& nn)
 
 void playVsHuman(int num_sims)
 {
-	TicTacToe game;
+	Game* game = new TicTacToe();
 
 	int firstPlayer = rand() % 2;
-	game.print();
+	game->print();
 	float *action_probs = new float[MAX_ACTIONS];
 	float temp = 0;
 
@@ -304,7 +305,7 @@ void playVsHuman(int num_sims)
 	while (true)
 	{
 		Action a;
-		if ((firstPlayer+game.mTurn)%2 == 0)
+		if ((firstPlayer+game->mTurn)%2 == 0)
 		{
 			printf("Human to play...\n");
 			// getActionProb(action_probs, game, nn, num_sims, temp);
@@ -323,26 +324,26 @@ void playVsHuman(int num_sims)
 			printf("\n");
 			for (int i = 0; i < MAX_ACTIONS; i++)
 			{
-				assert(action_probs[i] == 0 || game.isLegal(i));
+				assert(action_probs[i] == 0 || game->isLegal(i));
 			}
 		}
 
 
 		// examples.push_back(TrainingExample(game.state_to_tensor(),game.mTurn,action_probs,0));
-		assert(game.isLegal(a));
-		game.doAction(a);
-		game.print();
+		assert(game->isLegal(a));
+		game->doAction(a);
+		game->print();
 
-		if(game.isOver())
+		if(game->isOver())
 		{
-			if(game.getScore()==1)
+			if(game->getScore()==1)
 			{
 				if(firstPlayer==0)
 					printf("Human wins!\n");
 				else
 					printf("Computer wins!\n");
 			}
-			else if(game.getScore()==-1)
+			else if(game->getScore()==-1)
 			{
 				if(firstPlayer==0)
 					printf("Computer wins!\n");
