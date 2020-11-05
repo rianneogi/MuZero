@@ -18,8 +18,10 @@ public:
             mState[i] = 2;
         }
         mNumMoves = 0;
+        mMaxActions = 9;
+        mStateSize = 28;
     }
-    
+
     ~TicTacToe()
     {
         delete[] mState;

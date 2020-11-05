@@ -31,7 +31,7 @@ float search(Node* s, Game* game, const Net& nn)
 
 		//normalize the Pvalues
 		float sum_pvalues = 0;
-		for (int i = 0; i < MAX_ACTIONS;i++)
+		for (int i = 0; i < game->mMaxActions;i++)
 		{
 			if(game->isLegal(i))
 			{
@@ -46,7 +46,7 @@ float search(Node* s, Game* game, const Net& nn)
 		{
 			//return a uniform distribution over legal actions
 			std::vector<Action> actions = game->getActions();
-			for (int i = 0; i < MAX_ACTIONS; i++)
+			for (int i = 0; i < game->mMaxActions; i++)
 			{
 				if(game->isLegal(i))
 				{
@@ -60,7 +60,7 @@ float search(Node* s, Game* game, const Net& nn)
 		}
 		else
 		{
-			for (int i = 0; i < MAX_ACTIONS;i++)
+			for (int i = 0; i < game->mMaxActions;i++)
 			{
 				s->Pvalues[i] /= sum_pvalues;
 			}
@@ -89,7 +89,7 @@ float search(Node* s, Game* game, const Net& nn)
 	assert(s->children != nullptr);
 	if (s->children[a] == nullptr)
 	{
-		sp = new Node(s, MAX_ACTIONS);
+		sp = new Node(s, game->mMaxActions);
 		s->addChild(sp, a);
 	}
 	else
@@ -112,7 +112,7 @@ float search(Node* s, Game* game, const Net& nn)
 
 void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float temp)
 {
-	Node *root = new Node(nullptr, MAX_ACTIONS);
+	Node *root = new Node(nullptr, game->mMaxActions);
 	for (int i = 0; i < num_sims; i++)
 	{
 		// printf("sim %d\n", i);
@@ -121,11 +121,10 @@ void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float te
 
 	std::vector<Action> actions = game->getActions();
 	assert(actions.size() != 0);
-	// float* output = new float[MAX_ACTIONS];
+	// float* output = new float[game->mMaxActions];
 
-	if(temp==0)
+	if(temp==0) //get best action
 	{
-		//get best action
 		Action best_a = -1;
 		float best_v = -10000;
 		for (int i = 0; i < actions.size();i++)
@@ -138,9 +137,9 @@ void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float te
 			}
 		}
 
-		memset(res, 0, MAX_ACTIONS * sizeof(float));
+		memset(res, 0, game->mMaxActions * sizeof(float));
 		res[best_a] = 1;
-		// for (int i = 0; i < MAX_ACTIONS; i++)
+		// for (int i = 0; i < game->mMaxActions; i++)
 		// {
 		// 	if(i==best_a)
 		// 		res[i] = 1;
@@ -153,7 +152,7 @@ void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float te
 	}
 
 	int sum_n = 0;
-	for (int i = 0; i < MAX_ACTIONS; i++)
+	for (int i = 0; i < game->mMaxActions; i++)
 	{
 		// Action a = actions[i];
 		assert(root->Nvalues[i] == 0 || game->isLegal(i));
@@ -164,8 +163,8 @@ void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float te
 	if(sum_n == 0)
 	{
 		//return a uniform distribution over legal actions
-		// float* uniform = new float[MAX_ACTIONS];
-		for (int i = 0; i < MAX_ACTIONS;i++)
+		// float* uniform = new float[game->mMaxActions];
+		for (int i = 0; i < game->mMaxActions;i++)
 		{
 			if(game->isLegal(i))
 			{
@@ -179,12 +178,13 @@ void getActionProb(float* res, Game* game, const Net& nn, int num_sims, float te
 		// return uniform;
 	}
 
-	for (int i = 0; i < MAX_ACTIONS; i++)
+	for (int i = 0; i < game->mMaxActions; i++)
 	{
 		// Action a = actions[i];
 		res[i] = ((res[i] * 1.0f) / sum_n);
 	}
 
 	delete root;
+	// return root->Nvalues[best_a];
 	// return res;
 }

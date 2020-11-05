@@ -18,7 +18,7 @@ struct TrainingExample
 	float value;
 
 	TrainingExample() {}
-	TrainingExample(float *pos, int p, float *policy_vector, float v) : position(pos), player(p), policy(policy_vector), value(v) {}
+	TrainingExample(float *_position, int _player, float *_policy, float _value) : position(_position), player(_player), policy(_policy), value(_value) {}
 };
 
 class Net

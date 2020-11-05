@@ -2,8 +2,13 @@
 
 void Net::init()
 {
-	GameStateSize = 28;
-	GameActionSize = 9;
+	//State Size for TicTacToe: 28
+	//Action Size for TicTacToe: 9
+	//State Size for Connect 4: 7*6*3+1
+	//Action Size for Connect 4: 7
+
+	GameStateSize = 7*6*3+1;
+	GameActionSize = 7;
 	BatchSize = 32;
 
 	// int input_size = 9;
@@ -79,9 +84,9 @@ PolicyValuePair Net::predict(Game* pos) const
 
 	PolicyValuePair pv;
 	pv.value = outputValueBlob->Data(0);
-	pv.policy = new float[MAX_ACTIONS];
+	pv.policy = new float[pos->mMaxActions];
 	memcpy(pv.policy, outputPolicyBlob->Data.mData, GameActionSize * sizeof(float));
-	// for (int i = 0; i < MAX_ACTIONS; i++)
+	// for (int i = 0; i < game->mMaxActions; i++)
 	// {
 	// 	pv.policy[i] = policy[i];
 	// }

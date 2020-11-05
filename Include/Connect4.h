@@ -18,14 +18,16 @@ public:
             mState[i] = 2;
         }
         mNumMoves = 0;
+        mMaxActions = 7;
+        mStateSize = 7 * 6 * 3 + 1;
     }
-    
+
     ~Connect4()
     {
         delete[] mState;
     }
 
-    Connect4(const TicTacToe& other)
+    Connect4(const Connect4& other)
     {
         mTurn = other.mTurn;
         mNumMoves = other.mNumMoves;
@@ -46,8 +48,9 @@ public:
     
     void doAction(int pos)
     {
-		int ht = 0;
-		for (int i = 0; i < 6; i++)
+        assert(isLegal(pos));
+        int ht = 0;
+        for (int i = 0; i < 6; i++)
 		{
 			if(mState[pos*6+i]==2)
 			{
@@ -63,16 +66,21 @@ public:
     void undoAction(int pos)
     {
 		int ht = 0;
-		for (int i = 0; i < 6; i++)
+		for (int i = 1; i < 6; i++)
 		{
 			if(mState[pos*6+i]==2)
 			{
 				ht = i-1;
 				break;
 			}
-		}
-		mState[pos * 6 + ht] = 2;
-		mTurn = (mTurn + 1) % 2;
+            if(i==5)
+            {
+                ht = 5;
+            }
+        }
+        assert(mState[pos * 6 + ht] == (mTurn + 1) % 2);
+        mState[pos * 6 + ht] = 2;
+        mTurn = (mTurn + 1) % 2;
         mNumMoves--;
     }
 

@@ -350,7 +350,10 @@ std::vector<Action> Connect4::getActions() const
     std::vector<Action> v;
     for (int i = 0; i < 7; i++)
     {
-        v.push_back(i);
+		if(mState[i*6 + 5]==2)
+		{
+			v.push_back(i);
+		}
     }
     return v;
 }

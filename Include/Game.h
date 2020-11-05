@@ -10,6 +10,9 @@ class Game
 public:
 	int mTurn; //equal to 0 if player 1's turn and 1 if player 2's turn
 
+	int mMaxActions;
+	int mStateSize;
+
 	Game() {};
 	virtual ~Game() {};
 
@@ -19,7 +22,7 @@ public:
 	// virtual byte_t* getState() = 0;
 	// virtual int getStateSize() = 0;
 	virtual void restart() = 0;
-	virtual std::vector<Action> getActions() const = 0;
+	virtual std::vector<Action> getActions() const = 0;  //returns the set of actions, they need not be legal
 	virtual void stateToTensor(float *res) const = 0;
 	virtual float* stateToTensor() const = 0;
 	// virtual int getTurn() const = 0;

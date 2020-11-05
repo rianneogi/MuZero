@@ -1,3 +1,3 @@
 #include "Node.h"
 
-const int MAX_ACTIONS = 9;
+const int MAX_ACTIONS = 7;

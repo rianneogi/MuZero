@@ -21,12 +21,13 @@ int sample_action_prob(float* p, int count)
 	return last_nonzero;
 }
 
-void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn)
+void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn, Game* game)
 {
 	//Execute one episode of self-play and append collected data to examples
-	Game *game = new TicTacToe();
+	// Game *game = new Connect4();
 	// Net nn;
 	// nn.init();
+	game->restart();
 
 	int episodeStep = 0;
 	int EPISODE_MAX_STEP = 250;
@@ -35,18 +36,18 @@ void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn)
 	float temp = 1.0f;
 
 	int start_example_size = examples.size();
-	// float *action_probs = new float[MAX_ACTIONS];
+	// float *action_probs = new float[game->mMaxActions];
 	while (true)
 	{
 		episodeStep += 1;
 		
-		float *p = new float[MAX_ACTIONS];
+		float *p = new float[game->mMaxActions];
 		getActionProb(p, game, nn, num_sims, temp);
 		
-		std::vector<Action> actions = game->getActions();
+		// std::vector<Action> actions = game->getActions();
 
-		Action a = sample_action_prob(p, MAX_ACTIONS);
-		// memcpy(p, action_probs, MAX_ACTIONS * sizeof(float));
+		Action a = sample_action_prob(p, game->mMaxActions);
+		// memcpy(p, action_probs, game->mMaxActions * sizeof(float));
 		
 		examples.push_back(TrainingExample(game->stateToTensor(), game->mTurn==0? 1 : -1, p, 0));
 
@@ -54,10 +55,11 @@ void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn)
 		
 		if(game->isOver())
 		{
+			int winning_player = game->getScore();
 			for (int i = start_example_size; i < examples.size();i++)
 			{
 				//update the training data with the result of the game
-				examples[i].value = (game->getScore()==examples[i].player)? 1.0 : -1.0;
+				examples[i].value = (winning_player==examples[i].player)? 1.0 : -1.0;
 			}
 			break;
 		}
@@ -70,11 +72,11 @@ void executeEpisode(std::vector<TrainingExample>& examples, const Net& nn)
 	// delete action_probs;
 }
 
-float pit(const Net& net1, const Net& net2, int num_games)
+float pit(const Net& net1, const Net& net2, int num_games, Game* game)
 {
 	//Pits net1 and net2 against each other and returns the winrate of net1
 	int firstPlayer = 0;
-	Game* game = new TicTacToe();
+	// Game* game = new Connect4();
 
 	int score1 = 0;
 	int score2 = 0;
@@ -86,7 +88,7 @@ float pit(const Net& net1, const Net& net2, int num_games)
 	int numwins2 = 0;
 	int numdraws = 0;
 
-	float *action_probs = new float[MAX_ACTIONS];
+	float *action_probs = new float[game->mMaxActions];
 	for (int i = 0; i < num_games; i++)
 	{
 		int episodeStep = 0;
@@ -108,7 +110,7 @@ float pit(const Net& net1, const Net& net2, int num_games)
 			}
 
 			// std::vector<Action> actions = game.get_actions();
-			Action a = sample_action_prob(action_probs, MAX_ACTIONS);
+			Action a = sample_action_prob(action_probs, game->mMaxActions);
 
 			// examples.push_back(TrainingExample(game.state_to_tensor(),game.mTurn,action_probs,0));
 
@@ -192,12 +194,15 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 	//After every iteration, it retrains neural network with training data from self-play
 	//Then it pits the new network with the old and accepts it if it plays better
 
+	Game *game = new Connect4();
+
 	int MAX_EXAMPLES_SIZE = 30000;
 	int num_pitting_games = 20;
 	int training_epochs = 20;
 
 	std::vector<TrainingExample> examples;
 
+	std::string nn_file_name = "connect4.bin";
 
 	Net nn;
 	Net nn_old;
@@ -207,8 +212,8 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 	nn_old.init();
 	printf("Net initialization complete\n");
 
-	nn.load("tictactoe.bin");
-	bool loaded_from_old_network = true;
+	// nn.load(nn_file_name);
+	bool loaded_from_old_network = false;
 	nn.copyToGPU();
 
 	for (int iteration = 0; iteration != num_iters; iteration++)
@@ -219,7 +224,7 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 		{
 			if(i%10==0)
 				printf("Executing episode %d\n", i);
-			executeEpisode(examples, nn);
+			executeEpisode(examples, nn, game);
 		}
 
 		if(examples.size() >= MAX_EXAMPLES_SIZE)
@@ -239,18 +244,25 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 		float wr = 0;
 		if (iteration >= 1 || loaded_from_old_network)
 		{
-			wr = pit(nn, nn_old, num_pitting_games);
+			wr = pit(nn, nn_old, num_pitting_games, game);
 			if (wr < updateThreshold)
 				accept = false;
 		}
 		
 		if(accept)
 		{
-			printf("Accepting new network, wr: %f\n", wr);
+			if(iteration==0 && !loaded_from_old_network)
+			{
+				printf("Accepting first network by default\n");
+			}
+			else
+			{
+				printf("Accepting new network, wr: %f\n", wr);
+			}
 			nn.copyToCPU();
 			nn_old.copyFrom(nn);
 			nn_old.copyToGPU();
-			nn.save("tictactoe.bin");
+			nn.save(nn_file_name);
 		}
 		else
 		{
@@ -290,16 +302,16 @@ Action getHumanInput(Game* game, const Net& nn)
 
 void playVsHuman(int num_sims)
 {
-	Game* game = new TicTacToe();
+	Game* game = new Connect4();
 
 	int firstPlayer = rand() % 2;
 	game->print();
-	float *action_probs = new float[MAX_ACTIONS];
+	float *action_probs = new float[game->mMaxActions];
 	float temp = 0;
 
 	Net nn;
 	nn.init();
-	nn.load("tictactoe.bin");
+	nn.load("connect4.bin");
 	nn.copyToGPU();
 
 	while (true)
@@ -316,13 +328,13 @@ void playVsHuman(int num_sims)
 			printf("Computer is thinking...\n");
 			getActionProb(action_probs, game, nn, num_sims, temp);
 			// std::vector<Action> actions = game.get_actions();
-			a = sample_action_prob(action_probs, MAX_ACTIONS);
-			for (int i = 0; i < MAX_ACTIONS;i++)
+			a = sample_action_prob(action_probs, game->mMaxActions);
+			for (int i = 0; i < game->mMaxActions;i++)
 			{
 				printf("%f ", action_probs[i]);
 			}
 			printf("\n");
-			for (int i = 0; i < MAX_ACTIONS; i++)
+			for (int i = 0; i < game->mMaxActions; i++)
 			{
 				assert(action_probs[i] == 0 || game->isLegal(i));
 			}

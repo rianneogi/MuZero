@@ -86,7 +86,7 @@ file(GLOB SOURCE_FILES
 
 add_executable(MuZero ${SOURCE_FILES})
 target_link_libraries(MuZero libale.so)
-target_link_libraries(MuZero lua5.3)
+# target_link_libraries(MuZero lua5.3)
 target_link_libraries(MuZero libopenblas.a)
 target_link_libraries(MuZero libcudart.so)
 target_link_libraries(MuZero libcudadevrt.so)
