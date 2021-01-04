@@ -14,7 +14,7 @@ void Net::init()
 	// int input_size = 9;
 	// int action_size = 9;
 
-	float learning_rate = 0.01;
+	float learning_rate = 0.005;
 
 	board = new Board();
 

@@ -1,9 +1,14 @@
 #include "Training.h"
 
+std::mt19937 gRNG;
+std::uniform_real_distribution<float> gUniformDist;
+
 int sample_action_prob(float* p, int count)
 {
 	//samples an action from the vector p
-	float r = ((rand() % 10000) * 1.0f) / 10000;
+	// float r = ((gRNG() % 10000) * 1.0f) / 10000;
+	double r = gUniformDist(gRNG);
+	// printf("random: %f\n", r);
 	float sum = 0.0f;
 	int last_nonzero = -1;
 	for (int i = 0; i < count; i++)
@@ -198,7 +203,8 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 
 	int MAX_EXAMPLES_SIZE = 30000;
 	int num_pitting_games = 20;
-	int training_epochs = 20;
+	int training_epochs = 40;
+	int total_network_accepts = 0;
 
 	std::vector<TrainingExample> examples;
 
@@ -212,8 +218,8 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 	nn_old.init();
 	printf("Net initialization complete\n");
 
-	// nn.load(nn_file_name);
-	bool loaded_from_old_network = false;
+	nn.load(nn_file_name);
+	bool loaded_from_old_network = true;
 	nn.copyToGPU();
 
 	for (int iteration = 0; iteration != num_iters; iteration++)
@@ -251,13 +257,14 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 		
 		if(accept)
 		{
-			if(iteration==0 && !loaded_from_old_network)
+			total_network_accepts++;
+			if (iteration == 0 && !loaded_from_old_network)
 			{
 				printf("Accepting first network by default\n");
 			}
 			else
 			{
-				printf("Accepting new network, wr: %f\n", wr);
+				printf("Accepting new network, winrate: %f, total network accepts: %d\n", wr, total_network_accepts);
 			}
 			nn.copyToCPU();
 			nn_old.copyFrom(nn);
@@ -266,7 +273,7 @@ void alphaZero(int num_iters, int num_eps, float updateThreshold)
 		}
 		else
 		{
-			printf("Rejecting new network, wr: %f\n", wr);
+			printf("Rejecting new network, winrate: %f, total network accepts: %d\n", wr, total_network_accepts);
 			nn_old.copyToCPU();
 			nn.copyFrom(nn_old);
 			nn.copyToGPU();
@@ -311,7 +318,7 @@ void playVsHuman(int num_sims)
 
 	Net nn;
 	nn.init();
-	nn.load("connect4.bin");
+	// nn.load("connect4.bin");
 	nn.copyToGPU();
 
 	while (true)
